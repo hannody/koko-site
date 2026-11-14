@@ -32,7 +32,9 @@
         <div class="actions">
           <a class="btn btn-main" href="#games">See our games</a>
           <a class="btn" href="mailto:hello@koko.systems">Email us</a>
+          <button class="btn" id="play" type="button" aria-pressed="false">Play with a critter</button>
         </div>
+        <p class="hint" id="hint" hidden>Move with WASD or the arrow keys. Walk to the logo to say hi. Esc stops.</p>
       </div>
 
       <div class="play">
@@ -145,6 +147,103 @@
 
     document.getElementById("again").addEventListener("click", setup);
     setup();
+  </script>
+  <script>
+    (() => {
+      const btn = document.getElementById("play");
+      const hint = document.getElementById("hint");
+      const logo = document.querySelector(".logo");
+      const DIR = { arrowup: "up", w: "up", arrowdown: "down", s: "down", arrowleft: "left", a: "left", arrowright: "right", d: "right" };
+      const VEC = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+      const SPEED = 280, SIZE = 44;
+      let el = null, x = 0, y = 0, last = 0, held = [], touching = false, raf = 0;
+
+      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+      const hits = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+
+      const love = () => {
+        el.classList.remove("love");
+        void el.offsetWidth;
+        el.classList.add("love");
+        for (let i = 0; i < 3; i++) {
+          const h = document.createElement("span");
+          h.className = "heart";
+          h.textContent = "\u2665";
+          h.setAttribute("aria-hidden", "true");
+          h.style.setProperty("--dx", (i - 1) * 18 + "px");
+          h.style.animationDelay = i * .25 + "s";
+          h.addEventListener("animationend", () => h.remove());
+          el.append(h);
+        }
+        setTimeout(() => el && el.classList.remove("love"), 1600);
+      };
+
+      const tick = t => {
+        const dt = Math.min((t - last) / 1000, .05);
+        last = t;
+        let dx = 0, dy = 0;
+        held.forEach(d => { dx += VEC[d][0]; dy += VEC[d][1]; });
+        if (dx || dy) {
+          const n = Math.hypot(dx, dy), root = document.documentElement;
+          x = clamp(x + dx / n * SPEED * dt, 0, root.scrollWidth - SIZE);
+          y = clamp(y + dy / n * SPEED * dt, 0, root.scrollHeight - SIZE);
+          el.dataset.dir = held[held.length - 1];
+          el.style.transform = `translate(${x}px, ${y}px)`;
+          const r = el.getBoundingClientRect(), m = 120;
+          if (r.top < m) scrollBy({ top: r.top - m, behavior: "instant" });
+          else if (r.bottom > innerHeight - m) scrollBy({ top: r.bottom - innerHeight + m, behavior: "instant" });
+          const now = hits(el.getBoundingClientRect(), logo.getBoundingClientRect());
+          if (now && !touching) love();
+          touching = now;
+        }
+        raf = requestAnimationFrame(tick);
+      };
+
+      const start = () => {
+        el = document.createElement("span");
+        el.className = "mini player";
+        el.dataset.dir = "right";
+        el.style.setProperty("--col", "var(--sky)");
+        el.setAttribute("aria-hidden", "true");
+        el.innerHTML = '<span class="bod"><span class="eyes"><span class="eye"></span><span class="eye"></span></span></span>';
+        x = scrollX + innerWidth / 2;
+        y = scrollY + innerHeight / 2;
+        el.style.transform = `translate(${x}px, ${y}px)`;
+        document.body.append(el);
+        btn.textContent = "Stop playing";
+        btn.setAttribute("aria-pressed", "true");
+        hint.hidden = false;
+        last = performance.now();
+        raf = requestAnimationFrame(tick);
+      };
+
+      const stop = () => {
+        cancelAnimationFrame(raf);
+        el.remove();
+        el = null;
+        held = [];
+        touching = false;
+        btn.textContent = "Play with a critter";
+        btn.setAttribute("aria-pressed", "false");
+        hint.hidden = true;
+      };
+
+      btn.addEventListener("click", () => (el ? stop() : start()));
+
+      addEventListener("keydown", e => {
+        if (!el || e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.key === "Escape") return stop();
+        const d = DIR[e.key.toLowerCase()];
+        if (!d) return;
+        e.preventDefault();
+        if (!held.includes(d)) held.push(d);
+      });
+      addEventListener("keyup", e => {
+        const d = DIR[e.key.toLowerCase()];
+        held = held.filter(k => k !== d);
+      });
+      addEventListener("blur", () => { held = []; });
+    })();
   </script>
 </body>
 </html>
