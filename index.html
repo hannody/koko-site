@@ -193,9 +193,10 @@
     // Grid dots that slowly brighten with a soft halo, a few at a time
     const lit = new Set();
     const glint = () => {
-      if (document.hidden || lit.size >= 3) return;
-      let k;
-      do { k = Math.floor(Math.random() * 25); } while (lit.has(k));
+      if (document.hidden || lit.size >= 5) return;
+      const free = [...Array(25).keys()].filter(i => !lit.has(i) && !occupied.has(`${Math.floor(i / 5)},${i % 5}`));
+      if (!free.length) return;
+      const k = free[Math.floor(Math.random() * free.length)];
       lit.add(k);
       const el = document.createElement("span");
       el.className = "glint";
@@ -215,7 +216,7 @@
       const y = (inBoard ? r.top - b.top : r.top + scrollY) + (r.height - h) / 2;
       const g = document.createElement("span");
       g.className = "ghost";
-      g.style.cssText = `width:${w}px;height:${h}px;background:${cs.backgroundColor};border-radius:${isShip ? "50%" : cs.borderRadius};animation-duration:${isShip ? 1.4 : el.classList.contains("fly") ? .8 : .5}s`;
+      g.style.cssText = `width:${w}px;height:${h}px;background:${isShip ? cs.color : cs.backgroundColor};border-radius:${isShip ? "50%" : cs.borderRadius};animation-duration:${isShip ? 1.4 : el.classList.contains("fly") ? .8 : .5}s`;
       g.style.setProperty("--gx", x + "px");
       g.style.setProperty("--gy", y + "px");
       g.style.setProperty("--go", Math.min(.35, +cs.opacity || .3));
@@ -243,7 +244,7 @@
       const shipLoop = () => { ship(); setTimeout(shipLoop, 16000 + Math.random() * 12000); };
       setTimeout(shipLoop, 4000);
       requestAnimationFrame(sample);
-      const glow = () => { glint(); setTimeout(glow, 1000 + Math.random() * 1800); };
+      const glow = () => { glint(); setTimeout(glow, 700 + Math.random() * 1500); };
       setTimeout(glow, 600);
     }
   </script>
