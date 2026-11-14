@@ -106,6 +106,9 @@ button.btn { background: none; color: inherit; font: inherit; font-weight: 500; 
 }
 .glint { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--chalk); translate: -50% -50%; opacity: 0; box-shadow: 0 0 10px 5px rgba(242, 237, 228, .25); pointer-events: none; animation: glint 4s ease-in-out forwards; }
 @keyframes glint { 0%, 100% { opacity: 0; scale: .6; } 50% { opacity: .5; scale: 1.15; } }
+.stick { position: fixed; left: 1.25rem; bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)); z-index: 60; width: 112px; height: 112px; border-radius: 50%; background: rgba(42, 36, 64, .7); border: 1.5px solid var(--line); touch-action: none; user-select: none; -webkit-touch-callout: none; }
+.knob { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: var(--sky); opacity: .55; transition: translate .15s ease-out; }
+.stick.on .knob { transition: none; opacity: .85; }
 .fly { position: absolute; top: 0; left: 0; border-radius: 50%; pointer-events: none; }
 @keyframes wink { 50% { transform: scaleY(.1); } }
 @keyframes heart {
@@ -114,7 +117,6 @@ button.btn { background: none; color: inherit; font: inherit; font-weight: 500; 
   100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), -64px) scale(1.2); }
 }
 @keyframes heartfade { 0%, 100% { opacity: 0; } 30%, 70% { opacity: 1; } }
-@media (hover: none) and (pointer: coarse) { #play, .hint { display: none; } }
 
 /* Board */
 .play { justify-self: center; width: min(100%, 440px); }
@@ -175,4 +177,5 @@ h2 { font: 800 clamp(2rem, 4vw, 3rem)/1.05 var(--display); letter-spacing: -.03e
   .player.love .eye { animation: none; }
   .player.shake, .bang { animation: none; }
   .bod, .shoved .bod { transition: none; }
+  .knob { transition: none; }
 }

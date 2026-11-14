@@ -84,6 +84,8 @@
     <a href="privacy/">Privacy policy</a>
   </footer>
 
+  <div class="stick" id="stick" hidden aria-hidden="true"><span class="knob"></span></div>
+
   <script>
     const LEVEL = [
       [0, 1, "up", "fox"], [1, 1, "up", "sky"], [0, 3, "left", "leaf"],
@@ -257,6 +259,10 @@
       const VEC = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
       const SPEED = 280, SIZE = 44;
       const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
+      const HINT = hint.textContent, STICK_HINT = "Drag the stick to move. Walk to the logo to say hi.";
+      const stick = document.getElementById("stick"), knob = stick.firstElementChild, R = 40;
+      let pad = [0, 0];
       let el = null, x = 0, y = 0, lx = 0, ly = 0, last = 0, held = [], touching = false, fussing = false, raf = 0;
 
       const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -314,6 +320,24 @@
         setTimeout(() => { if (el !== me) return; me.classList.remove("shake"); setup(true); fussing = false; setTimeout(() => { if (el === me) love(); }, 550); }, 2000);
       };
 
+      const steer = e => {
+        const r = stick.getBoundingClientRect();
+        let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+        const d = Math.hypot(dx, dy), k = d > R ? R / d : 1;
+        dx *= k; dy *= k;
+        knob.style.translate = `${dx}px ${dy}px`;
+        pad = Math.hypot(dx, dy) < R * .2 ? [0, 0] : [dx / R, dy / R];
+      };
+      const release = () => {
+        stick.classList.remove("on");
+        knob.style.translate = "";
+        pad = [0, 0];
+      };
+      stick.addEventListener("pointerdown", e => { stick.setPointerCapture(e.pointerId); stick.classList.add("on"); steer(e); });
+      stick.addEventListener("pointermove", e => { if (stick.hasPointerCapture(e.pointerId)) steer(e); });
+      stick.addEventListener("pointerup", release);
+      stick.addEventListener("pointercancel", release);
+
       const puff = () => {
         const p = document.createElement("span");
         p.className = "trail";
@@ -328,11 +352,12 @@
         last = t;
         let dx = 0, dy = 0;
         held.forEach(d => { dx += VEC[d][0]; dy += VEC[d][1]; });
+        dx += pad[0]; dy += pad[1];
         if (dx || dy) {
-          const n = Math.hypot(dx, dy), root = document.documentElement;
+          const n = Math.max(1, Math.hypot(dx, dy)), root = document.documentElement;
           x = clamp(x + dx / n * SPEED * dt, 0, root.scrollWidth - SIZE);
           y = clamp(y + dy / n * SPEED * dt, 0, root.scrollHeight - SIZE);
-          el.dataset.dir = held[held.length - 1];
+          el.dataset.dir = pad[0] || pad[1] ? (Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up")) : held[held.length - 1];
           el.style.transform = `translate(${x}px, ${y}px)`;
           if (!calm && Math.hypot(x - lx, y - ly) > 12) { puff(); lx = x; ly = y; }
           const r = el.getBoundingClientRect(), m = 120;
@@ -361,7 +386,9 @@
         document.body.append(el);
         btn.textContent = "Stop playing";
         btn.setAttribute("aria-pressed", "true");
+        hint.textContent = touch ? STICK_HINT : HINT;
         hint.hidden = false;
+        stick.hidden = !touch;
         last = performance.now();
         raf = requestAnimationFrame(tick);
       };
@@ -380,6 +407,8 @@
         btn.textContent = "Play with a critter";
         btn.setAttribute("aria-pressed", "false");
         hint.hidden = true;
+        stick.hidden = true;
+        release();
       };
 
       btn.addEventListener("click", () => (el ? stop() : start()));
