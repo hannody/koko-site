@@ -154,6 +154,29 @@
 
     document.getElementById("again").addEventListener("click", () => setup(true));
     setup();
+
+    const fly = () => {
+      if (document.hidden || board.querySelectorAll(".fly").length >= 2) return;
+      const W = board.clientWidth, H = board.clientHeight;
+      const depth = .4 + Math.random() * .6, size = Math.round(6 + 12 * depth);
+      const onEdge = e => { const t = Math.random(); return [[t * W, -size], [W + size, t * H], [t * W, H + size], [-size, t * H]][e]; };
+      const e1 = Math.floor(Math.random() * 4), e2 = (e1 + 1 + Math.floor(Math.random() * 3)) % 4;
+      const [sx, sy] = onEdge(e1), [ex, ey] = onEdge(e2);
+      const cx = (sx + ex) / 2 + (Math.random() - .5) * W * .8, cy = (sy + ey) / 2 + (Math.random() - .5) * H * .8;
+      const frames = [0, .25, .5, .75, 1].map(t => {
+        const a = (1 - t) * (1 - t), b = 2 * (1 - t) * t, d = t * t;
+        return { transform: `translate(${a * sx + b * cx + d * ex}px, ${a * sy + b * cy + d * ey}px)` };
+      });
+      const el = document.createElement("span");
+      el.className = "fly";
+      el.style.cssText = `width:${size}px;height:${size}px;opacity:${(.12 + .2 * depth).toFixed(2)};background:var(--${["fox", "leaf", "sky", "sun"][Math.floor(Math.random() * 4)]})`;
+      board.prepend(el);
+      el.animate(frames, { duration: (11 - 5 * depth) * 1000, easing: "linear" }).onfinish = () => el.remove();
+    };
+    if (!calm) {
+      const loop = () => { fly(); setTimeout(loop, 3000 + Math.random() * 4000); };
+      setTimeout(loop, 1200);
+    }
   </script>
   <script>
     (() => {
@@ -203,6 +226,12 @@
         });
       };
 
+      const inBoard = () => {
+        const p = el.getBoundingClientRect(), b = board.getBoundingClientRect();
+        const cx = p.left + p.width / 2, cy = p.top + p.height / 2;
+        return cx > b.left && cx < b.right && cy > b.top && cy < b.bottom;
+      };
+
       const fuss = () => {
         const me = el;
         fussing = true;
@@ -212,7 +241,7 @@
         bang.setAttribute("aria-hidden", "true");
         me.append(bang);
         setTimeout(() => { if (el !== me) return; bang.remove(); me.classList.add("shake"); }, 1300);
-        setTimeout(() => { if (el !== me) return; me.classList.remove("shake"); setup(true); fussing = false; }, 2000);
+        setTimeout(() => { if (el !== me) return; me.classList.remove("shake"); setup(true); fussing = false; setTimeout(() => { if (el === me) love(); }, 550); }, 2000);
       };
 
       const puff = () => {
@@ -244,7 +273,7 @@
           touching = now;
           nudge();
         }
-        if (!fussing && remaining === 0) fuss();
+        if (!fussing && remaining === 0 && inBoard()) fuss();
         raf = requestAnimationFrame(tick);
       };
 
