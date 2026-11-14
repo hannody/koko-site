@@ -85,7 +85,6 @@
   </footer>
 
   <div class="stick" id="stick" hidden aria-hidden="true"><span class="knob"></span></div>
-  <button class="btn quit" id="quit" type="button" hidden>Stop playing</button>
 
   <script>
     const LEVEL = [
@@ -264,7 +263,6 @@
       const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
       const HINT = hint.textContent, STICK_HINT = "Drag the stick to move. Walk to the logo to say hi.";
       const stick = document.getElementById("stick"), knob = stick.firstElementChild, R = 34;
-      const quit = document.getElementById("quit");
       let pad = [0, 0];
       let el = null, x = 0, y = 0, lx = 0, ly = 0, last = 0, held = [], touching = false, fussing = false, raf = 0;
 
@@ -399,7 +397,6 @@
         hint.textContent = touch ? STICK_HINT : HINT;
         hint.hidden = false;
         stick.hidden = !touch;
-        quit.hidden = !touch;
         last = performance.now();
         raf = requestAnimationFrame(tick);
       };
@@ -419,12 +416,10 @@
         btn.setAttribute("aria-pressed", "false");
         hint.hidden = true;
         stick.hidden = true;
-        quit.hidden = true;
         release();
       };
 
       btn.addEventListener("click", () => (el ? stop() : start()));
-      quit.addEventListener("click", () => el && stop());
 
       addEventListener("keydown", e => {
         if (!el || e.ctrlKey || e.metaKey || e.altKey) return;
