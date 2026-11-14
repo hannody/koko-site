@@ -102,6 +102,8 @@ button.btn { background: none; color: inherit; font: inherit; font-weight: 500; 
   from { opacity: var(--go, .3); transform: translate(var(--gx), var(--gy)) scale(.9); }
   to { opacity: 0; transform: translate(var(--gx), var(--gy)) scale(.3); }
 }
+.glint { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--chalk); translate: -50% -50%; opacity: 0; box-shadow: 0 0 10px 5px rgba(242, 237, 228, .25); pointer-events: none; animation: glint 4s ease-in-out forwards; }
+@keyframes glint { 0%, 100% { opacity: 0; scale: .6; } 50% { opacity: .5; scale: 1.15; } }
 .fly { position: absolute; top: 0; left: 0; border-radius: 50%; pointer-events: none; }
 @keyframes wink { 50% { transform: scaleY(.1); } }
 @keyframes heart {

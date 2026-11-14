@@ -190,6 +190,20 @@
       el.animate(frames, { duration: (16 + Math.random() * 8) * 1000, easing: "linear" }).onfinish = () => el.remove();
     };
 
+    // Grid dots that slowly brighten with a soft halo, a few at a time
+    const lit = new Set();
+    const glint = () => {
+      if (document.hidden || lit.size >= 3) return;
+      let k;
+      do { k = Math.floor(Math.random() * 25); } while (lit.has(k));
+      lit.add(k);
+      const el = document.createElement("span");
+      el.className = "glint";
+      el.style.cssText = `left:${(k % 5) * 20 + 10}%;top:${Math.floor(k / 5) * 20 + 10}%;animation-duration:${(3 + Math.random() * 2.5).toFixed(1)}s`;
+      el.addEventListener("animationend", () => { lit.delete(k); el.remove(); });
+      board.prepend(el);
+    };
+
     // Fading trail behind anything that moves (critters, flyers, the ship)
     const TRACK = ".critter .bod, .mini:not(.player) .bod, .fly, .ship";
     const seen = new WeakMap();
@@ -229,6 +243,8 @@
       const shipLoop = () => { ship(); setTimeout(shipLoop, 16000 + Math.random() * 12000); };
       setTimeout(shipLoop, 4000);
       requestAnimationFrame(sample);
+      const glow = () => { glint(); setTimeout(glow, 1000 + Math.random() * 1800); };
+      setTimeout(glow, 600);
     }
   </script>
   <script>
