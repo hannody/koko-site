@@ -257,11 +257,12 @@
       const logo = document.querySelector(".logo");
       const DIR = { arrowup: "up", w: "up", arrowdown: "down", s: "down", arrowleft: "left", a: "left", arrowright: "right", d: "right" };
       const VEC = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
-      const SPEED = 280, SIZE = 44;
+      const SPEED = 280;
+      let SIZE = 44;
       const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
       const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
       const HINT = hint.textContent, STICK_HINT = "Drag the stick to move. Walk to the logo to say hi.";
-      const stick = document.getElementById("stick"), knob = stick.firstElementChild, R = 40;
+      const stick = document.getElementById("stick"), knob = stick.firstElementChild, R = 34;
       let pad = [0, 0];
       let el = null, x = 0, y = 0, lx = 0, ly = 0, last = 0, held = [], touching = false, fussing = false, raf = 0;
 
@@ -326,7 +327,8 @@
         const d = Math.hypot(dx, dy), k = d > R ? R / d : 1;
         dx *= k; dy *= k;
         knob.style.translate = `${dx}px ${dy}px`;
-        pad = Math.hypot(dx, dy) < R * .2 ? [0, 0] : [dx / R, dy / R];
+        const m = Math.hypot(dx, dy) / R, f = m < .15 ? 0 : ((m - .15) / .85) ** 1.5;
+        pad = f ? [dx / (m * R) * f, dy / (m * R) * f] : [0, 0];
       };
       const release = () => {
         stick.classList.remove("on");
@@ -337,6 +339,11 @@
       stick.addEventListener("pointermove", e => { if (stick.hasPointerCapture(e.pointerId)) steer(e); });
       stick.addEventListener("pointerup", release);
       stick.addEventListener("pointercancel", release);
+
+      const fit = () => {
+        SIZE = clamp(Math.round(board.clientWidth * .168), 28, 44);
+        document.documentElement.style.setProperty("--ps", SIZE + "px");
+      };
 
       const puff = () => {
         const p = document.createElement("span");
@@ -354,9 +361,9 @@
         held.forEach(d => { dx += VEC[d][0]; dy += VEC[d][1]; });
         dx += pad[0]; dy += pad[1];
         if (dx || dy) {
-          const n = Math.max(1, Math.hypot(dx, dy)), root = document.documentElement;
-          x = clamp(x + dx / n * SPEED * dt, 0, root.scrollWidth - SIZE);
-          y = clamp(y + dy / n * SPEED * dt, 0, root.scrollHeight - SIZE);
+          const n = Math.max(1, Math.hypot(dx, dy)), root = document.documentElement, sp = Math.min(SPEED, innerWidth * .45);
+          x = clamp(x + dx / n * sp * dt, 0, root.scrollWidth - SIZE);
+          y = clamp(y + dy / n * sp * dt, 0, root.scrollHeight - SIZE);
           el.dataset.dir = pad[0] || pad[1] ? (Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up")) : held[held.length - 1];
           el.style.transform = `translate(${x}px, ${y}px)`;
           if (!calm && Math.hypot(x - lx, y - ly) > 12) { puff(); lx = x; ly = y; }
@@ -373,6 +380,7 @@
       };
 
       const start = () => {
+        fit();
         el = document.createElement("span");
         el.className = "mini player";
         el.dataset.dir = "right";
@@ -426,6 +434,7 @@
         held = held.filter(k => k !== d);
       });
       addEventListener("blur", () => { held = []; });
+      addEventListener("resize", () => { if (el) fit(); });
     })();
   </script>
 </body>
