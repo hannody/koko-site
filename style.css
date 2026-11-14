@@ -55,7 +55,7 @@ a { color: inherit; }
   86% { transform: translate(0, 35%); }
   93% { transform: translate(var(--px, 0), var(--py, 0)); }
 }
-.mini { display: inline-block; width: var(--size, 30px); height: var(--size, 30px); }
+.mini { display: inline-block; flex: none; width: var(--size, 30px); height: var(--size, 30px); }
 
 /* Hero */
 .hero { display: grid; gap: 3.5rem; align-items: center; padding-block: 3rem 6rem; }
