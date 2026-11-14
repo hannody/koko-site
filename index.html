@@ -126,7 +126,7 @@
       if (!remaining) setTimeout(() => board.classList.add("cleared"), calm ? 0 : 450);
     }
 
-    function setup() {
+    function setup(back) {
       board.querySelectorAll(".critter").forEach(el => el.remove());
       board.classList.remove("cleared");
       occupied = new Set(LEVEL.map(([r, c]) => `${r},${c}`));
@@ -138,14 +138,21 @@
         el.dataset.dir = dir;
         el.style.cssText = `--r:${r};--c:${c};--col:var(--${col})`;
         el.setAttribute("aria-label", `Critter facing ${dir}`);
+        if (back && !calm) el.style.transform = `translate(${STEP[dir][1] * 600}%, ${STEP[dir][0] * 600}%)`;
         el.innerHTML = '<span class="bod"><span class="eyes"><span class="eye"></span><span class="eye"></span></span></span>';
         el.addEventListener("click", () => tap(el, r, c, dir));
         board.appendChild(el);
       }
+      if (back && !calm) {
+        void board.offsetWidth;
+        const all = board.querySelectorAll(".critter");
+        all.forEach(el => { el.classList.add("return"); el.style.transform = ""; });
+        setTimeout(() => all.forEach(el => el.classList.remove("return")), 600);
+      }
       showCount();
     }
 
-    document.getElementById("again").addEventListener("click", setup);
+    document.getElementById("again").addEventListener("click", () => setup(true));
     setup();
   </script>
   <script>
@@ -157,7 +164,7 @@
       const VEC = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
       const SPEED = 280, SIZE = 44;
       const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      let el = null, x = 0, y = 0, lx = 0, ly = 0, last = 0, held = [], touching = false, raf = 0;
+      let el = null, x = 0, y = 0, lx = 0, ly = 0, last = 0, held = [], touching = false, fussing = false, raf = 0;
 
       const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
       const hits = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
@@ -196,6 +203,18 @@
         });
       };
 
+      const fuss = () => {
+        const me = el;
+        fussing = true;
+        const bang = document.createElement("span");
+        bang.className = "bang";
+        bang.textContent = "!";
+        bang.setAttribute("aria-hidden", "true");
+        me.append(bang);
+        setTimeout(() => { if (el !== me) return; bang.remove(); me.classList.add("shake"); }, 1300);
+        setTimeout(() => { if (el !== me) return; me.classList.remove("shake"); setup(true); fussing = false; }, 2000);
+      };
+
       const puff = () => {
         const p = document.createElement("span");
         p.className = "trail";
@@ -225,6 +244,7 @@
           touching = now;
           nudge();
         }
+        if (!fussing && remaining === 0) fuss();
         raf = requestAnimationFrame(tick);
       };
 
@@ -257,6 +277,7 @@
         el = null;
         held = [];
         touching = false;
+        fussing = false;
         btn.textContent = "Play with a critter";
         btn.setAttribute("aria-pressed", "false");
         hint.hidden = true;
