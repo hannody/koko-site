@@ -156,7 +156,8 @@
       const DIR = { arrowup: "up", w: "up", arrowdown: "down", s: "down", arrowleft: "left", a: "left", arrowright: "right", d: "right" };
       const VEC = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
       const SPEED = 280, SIZE = 44;
-      let el = null, x = 0, y = 0, last = 0, held = [], touching = false, raf = 0;
+      const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let el = null, x = 0, y = 0, lx = 0, ly = 0, last = 0, held = [], touching = false, raf = 0;
 
       const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
       const hits = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
@@ -178,6 +179,15 @@
         setTimeout(() => el && el.classList.remove("love"), 1600);
       };
 
+      const puff = () => {
+        const p = document.createElement("span");
+        p.className = "trail";
+        p.style.setProperty("--tx", x + "px");
+        p.style.setProperty("--ty", y + "px");
+        p.addEventListener("animationend", () => p.remove());
+        document.body.append(p);
+      };
+
       const tick = t => {
         const dt = Math.min((t - last) / 1000, .05);
         last = t;
@@ -189,6 +199,7 @@
           y = clamp(y + dy / n * SPEED * dt, 0, root.scrollHeight - SIZE);
           el.dataset.dir = held[held.length - 1];
           el.style.transform = `translate(${x}px, ${y}px)`;
+          if (!calm && Math.hypot(x - lx, y - ly) > 12) { puff(); lx = x; ly = y; }
           const r = el.getBoundingClientRect(), m = 120;
           if (r.top < m) scrollBy({ top: r.top - m, behavior: "instant" });
           else if (r.bottom > innerHeight - m) scrollBy({ top: r.bottom - innerHeight + m, behavior: "instant" });
@@ -208,6 +219,7 @@
         el.innerHTML = '<span class="bod"><span class="eyes"><span class="eye"></span><span class="eye"></span></span></span>';
         x = scrollX + innerWidth / 2;
         y = scrollY + innerHeight / 2;
+        lx = x; ly = y;
         el.style.transform = `translate(${x}px, ${y}px)`;
         document.body.append(el);
         btn.textContent = "Stop playing";

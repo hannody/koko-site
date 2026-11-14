@@ -72,6 +72,11 @@ button.btn { background: none; color: inherit; font: inherit; font-weight: 500; 
 .hint { margin-top: .75rem; color: var(--mute); font-size: .95rem; }
 .player { --size: 44px; position: absolute; top: 0; left: 0; z-index: 50; pointer-events: none; }
 .player.love .eye { animation: wink .5s 3; animation-delay: 0s; }
+.trail { position: absolute; top: 0; left: 0; z-index: 49; width: 44px; height: 44px; border-radius: 36%; background: var(--sky); pointer-events: none; animation: trail .5s ease-out forwards; }
+@keyframes trail {
+  from { opacity: .35; transform: translate(var(--tx), var(--ty)) scale(.9); }
+  to { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(.3); }
+}
 .heart { position: absolute; left: 50%; top: -4px; color: var(--fox); font-size: 1.25rem; line-height: 1; opacity: 0; animation: heart 1.4s ease-out both; }
 @keyframes wink { 50% { transform: scaleY(.1); } }
 @keyframes heart {
