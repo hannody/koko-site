@@ -95,6 +95,13 @@ button.btn { background: none; color: inherit; font: inherit; font-weight: 500; 
   75% { translate: -3px 0; }
   90% { translate: 3px 0; }
 }
+.ship { position: absolute; top: 0; left: 0; width: 26px; height: 10px; background: var(--mute); clip-path: polygon(0 0, 100% 50%, 0 100%, 22% 50%); opacity: .25; pointer-events: none; animation: shipblink 2.4s ease-in-out infinite; }
+.ghost { position: absolute; top: 0; left: 0; pointer-events: none; animation: ghost .5s ease-out forwards; }
+@keyframes shipblink { 50% { opacity: .5; } }
+@keyframes ghost {
+  from { opacity: var(--go, .3); transform: translate(var(--gx), var(--gy)) scale(.9); }
+  to { opacity: 0; transform: translate(var(--gx), var(--gy)) scale(.3); }
+}
 .fly { position: absolute; top: 0; left: 0; border-radius: 50%; pointer-events: none; }
 @keyframes wink { 50% { transform: scaleY(.1); } }
 @keyframes heart {

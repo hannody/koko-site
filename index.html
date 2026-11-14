@@ -173,9 +173,62 @@
       board.prepend(el);
       el.animate(frames, { duration: (11 - 5 * depth) * 1000, easing: "linear" }).onfinish = () => el.remove();
     };
+    const ship = () => {
+      if (document.hidden || board.querySelector(".ship")) return;
+      const W = board.clientWidth, H = board.clientHeight, s = 22, ltr = Math.random() < .5;
+      const sx = ltr ? -2 * s : W + 2 * s, ex = ltr ? W + 2 * s : -2 * s;
+      const sy = H * (.1 + Math.random() * .8), ey = Math.max(0, Math.min(H, sy + (Math.random() - .5) * H * .5));
+      const cx = W / 2, cy = (sy + ey) / 2 + (Math.random() - .5) * H * .3;
+      const frames = [0, .2, .4, .6, .8, 1].map(t => {
+        const a = (1 - t) * (1 - t), b = 2 * (1 - t) * t, d = t * t;
+        const vx = 2 * (1 - t) * (cx - sx) + 2 * t * (ex - cx), vy = 2 * (1 - t) * (cy - sy) + 2 * t * (ey - cy);
+        return { transform: `translate(${a * sx + b * cx + d * ex}px, ${a * sy + b * cy + d * ey}px) rotate(${Math.atan2(vy, vx)}rad)` };
+      });
+      const el = document.createElement("span");
+      el.className = "ship";
+      board.prepend(el);
+      el.animate(frames, { duration: (16 + Math.random() * 8) * 1000, easing: "linear" }).onfinish = () => el.remove();
+    };
+
+    // Fading trail behind anything that moves (critters, flyers, the ship)
+    const TRACK = ".critter .bod, .mini:not(.player) .bod, .fly, .ship";
+    const seen = new WeakMap();
+    const ghost = (el, r, b) => {
+      const isShip = el.classList.contains("ship"), cs = getComputedStyle(el);
+      const w = isShip ? el.offsetHeight * .9 : r.width, h = isShip ? w : r.height;
+      const inBoard = board.contains(el);
+      const x = (inBoard ? r.left - b.left : r.left + scrollX) + (r.width - w) / 2;
+      const y = (inBoard ? r.top - b.top : r.top + scrollY) + (r.height - h) / 2;
+      const g = document.createElement("span");
+      g.className = "ghost";
+      g.style.cssText = `width:${w}px;height:${h}px;background:${cs.backgroundColor};border-radius:${isShip ? "50%" : cs.borderRadius};animation-duration:${isShip ? 1.4 : el.classList.contains("fly") ? .8 : .5}s`;
+      g.style.setProperty("--gx", x + "px");
+      g.style.setProperty("--gy", y + "px");
+      g.style.setProperty("--go", Math.min(.35, +cs.opacity || .3));
+      g.addEventListener("animationend", () => g.remove());
+      (inBoard ? board : document.body)[inBoard ? "prepend" : "append"](g);
+    };
+    const sample = () => {
+      if (!document.hidden) {
+        const b = board.getBoundingClientRect();
+        document.querySelectorAll(TRACK).forEach(el => {
+          const r = el.getBoundingClientRect(), x = r.left + scrollX + r.width / 2, y = r.top + scrollY + r.height / 2, p = seen.get(el);
+          if (!p) return seen.set(el, [x, y]);
+          const gap = el.classList.contains("ship") ? 6 : Math.max(8, r.width * .35);
+          if (Math.hypot(x - p[0], y - p[1]) < gap) return;
+          seen.set(el, [x, y]);
+          ghost(el, r, b);
+        });
+      }
+      requestAnimationFrame(sample);
+    };
+
     if (!calm) {
       const loop = () => { fly(); setTimeout(loop, 3000 + Math.random() * 4000); };
       setTimeout(loop, 1200);
+      const shipLoop = () => { ship(); setTimeout(shipLoop, 16000 + Math.random() * 12000); };
+      setTimeout(shipLoop, 4000);
+      requestAnimationFrame(sample);
     }
   </script>
   <script>
