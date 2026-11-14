@@ -179,6 +179,23 @@
         setTimeout(() => el && el.classList.remove("love"), 1600);
       };
 
+      const SELECTOR = ".critter, .mini:not(.player)";
+
+      const nudge = () => {
+        const p = el.getBoundingClientRect(), px = p.left + p.width / 2, py = p.top + p.height / 2;
+        document.querySelectorAll(SELECTOR).forEach(h => {
+          const r = h.getBoundingClientRect();
+          const dx = px - (r.left + r.width / 2), dy = py - (r.top + r.height / 2);
+          const d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
+          const push = Math.max(0, Math.min(48, 22 + r.width * .42 + 4 - d));
+          h.classList.toggle("watching", d < 170);
+          h.classList.toggle("shoved", push > 0);
+          h.style.setProperty("--wx", ux * 35 + "%");
+          h.style.setProperty("--wy", uy * 35 + "%");
+          h.querySelector(".bod").style.translate = push ? `${-ux * push}px ${-uy * push}px` : "";
+        });
+      };
+
       const puff = () => {
         const p = document.createElement("span");
         p.className = "trail";
@@ -206,6 +223,7 @@
           const now = hits(el.getBoundingClientRect(), logo.getBoundingClientRect());
           if (now && !touching) love();
           touching = now;
+          nudge();
         }
         raf = requestAnimationFrame(tick);
       };
@@ -231,6 +249,10 @@
 
       const stop = () => {
         cancelAnimationFrame(raf);
+        document.querySelectorAll(SELECTOR).forEach(h => {
+          h.classList.remove("watching", "shoved");
+          h.querySelector(".bod").style.translate = "";
+        });
         el.remove();
         el = null;
         held = [];

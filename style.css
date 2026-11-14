@@ -78,6 +78,10 @@ button.btn { background: none; color: inherit; font: inherit; font-weight: 500; 
   to { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(.3); }
 }
 .heart { position: absolute; left: 50%; top: -4px; color: var(--fox); font-size: 1.25rem; line-height: 1; opacity: 0; animation: heart 1.4s ease-out both; }
+.bod { transition: translate .5s cubic-bezier(.34, 1.56, .64, 1); }
+.shoved .bod { transition: translate .12s ease-out; }
+.watching[data-dir] { --px: var(--wx, 0%); --py: var(--wy, 0%); }
+.watching .eye::after { animation: none; }
 @keyframes wink { 50% { transform: scaleY(.1); } }
 @keyframes heart {
   0% { opacity: 0; transform: translate(calc(-50% + var(--dx)), 0) scale(.6); }
@@ -144,4 +148,5 @@ h2 { font: 800 clamp(2rem, 4vw, 3rem)/1.05 var(--display); letter-spacing: -.03e
   .critter.nope .bod { animation: none; }
   .heart { animation-name: heartfade; }
   .player.love .eye { animation: none; }
+  .bod, .shoved .bod { transition: none; }
 }
