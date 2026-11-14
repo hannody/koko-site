@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Koko Systems – small games that are hard to put down</title>
+  <meta name="description" content="Koko Systems is an independent studio making short, tactile puzzle games for phones.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="wrap top">
+    <a class="logo" href="./">
+      <span class="mini" data-dir="right" aria-hidden="true"><span class="bod"><span class="eyes"><span class="eye"></span><span class="eye"></span></span></span></span>
+      koko systems
+    </a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="#games">Games</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="wrap hero">
+      <div>
+        <h1>Small games that are hard to put down.</h1>
+        <p class="lede">Koko Systems is an independent studio making short, tactile puzzle games for phones. Our first game, Critter Escape, is coming to Android.</p>
+        <div class="actions">
+          <a class="btn btn-main" href="#games">See our games</a>
+          <a class="btn" href="mailto:hello@koko.systems">Email us</a>
+        </div>
+      </div>
+
+      <div class="play">
+        <div class="board" id="board" role="group" aria-label="Mini puzzle: tap critters to let them escape">
+          <div class="win">
+            <p>Board cleared.<br>That’s Critter Escape.</p>
+            <button class="btn btn-main" type="button" id="again">Play again</button>
+          </div>
+        </div>
+        <div class="board-foot">
+          <span>A critter only escapes if nothing is in its way.</span>
+          <span id="left" aria-live="polite"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="games">
+      <div class="wrap">
+        <h2>Games</h2>
+        <article class="game">
+          <div>
+            <h3>Critter Escape</h3>
+            <p>A tap-to-escape puzzle. Every critter runs the way it’s looking, so clear the board by sending them out in the right order.</p>
+            <span class="tag">Coming soon to Google Play</span>
+          </div>
+          <div class="lineup" aria-hidden="true">
+            <span class="mini" data-dir="up" style="--col: var(--fox)"><span class="bod"><span class="eyes"><span class="eye"></span><span class="eye"></span></span></span></span>
+            <span class="mini" data-dir="left" style="--col: var(--leaf)"><span class="bod"><span class="eyes"><span class="eye"></span><span class="eye"></span></span></span></span>
+            <span class="mini" data-dir="down" style="--col: var(--sky)"><span class="bod"><span class="eyes"><span class="eye"></span><span class="eye"></span></span></span></span>
+            <span class="mini" data-dir="right" style="--col: var(--sun)"><span class="bod"><span class="eyes"><span class="eye"></span><span class="eye"></span></span></span></span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="wrap">
+        <h2>Get in touch</h2>
+        <p>Publishers, players and press are all welcome.</p>
+        <a class="mail" href="mailto:hello@koko.systems">hello@koko.systems</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <span>© 2026 Koko Systems</span>
+    <a href="privacy/">Privacy policy</a>
+  </footer>
+
+  <script>
+    const LEVEL = [
+      [0, 1, "up", "fox"], [1, 1, "up", "sky"], [0, 3, "left", "leaf"],
+      [1, 3, "right", "sun"], [2, 0, "left", "fox"], [2, 2, "left", "leaf"],
+      [2, 3, "down", "sky"], [3, 2, "down", "sun"], [4, 2, "right", "leaf"],
+      [3, 4, "up", "fox"], [4, 0, "up", "sky"]
+    ];
+    const STEP = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] };
+    const board = document.getElementById("board");
+    const leftEl = document.getElementById("left");
+    const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let occupied, remaining;
+
+    const showCount = () => {
+      leftEl.textContent = remaining ? `${remaining} critters left` : "All free";
+    };
+
+    const isBlocked = (r, c, dir) => {
+      const [dr, dc] = STEP[dir];
+      for (r += dr, c += dc; r >= 0 && r < 5 && c >= 0 && c < 5; r += dr, c += dc) {
+        if (occupied.has(`${r},${c}`)) return true;
+      }
+      return false;
+    };
+
+    function tap(el, r, c, dir) {
+      if (isBlocked(r, c, dir)) {
+        el.classList.remove("nope");
+        void el.offsetWidth;
+        el.classList.add("nope");
+        return;
+      }
+      const [dr, dc] = STEP[dir];
+      occupied.delete(`${r},${c}`);
+      el.disabled = true;
+      el.style.transform = `translate(${dc * 600}%, ${dr * 600}%)`;
+      setTimeout(() => el.remove(), calm ? 0 : 500);
+      remaining--;
+      showCount();
+      if (!remaining) setTimeout(() => board.classList.add("cleared"), calm ? 0 : 450);
+    }
+
+    function setup() {
+      board.querySelectorAll(".critter").forEach(el => el.remove());
+      board.classList.remove("cleared");
+      occupied = new Set(LEVEL.map(([r, c]) => `${r},${c}`));
+      remaining = LEVEL.length;
+      for (const [r, c, dir, col] of LEVEL) {
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = "critter";
+        el.dataset.dir = dir;
+        el.style.cssText = `--r:${r};--c:${c};--col:var(--${col})`;
+        el.setAttribute("aria-label", `Critter facing ${dir}`);
+        el.innerHTML = '<span class="bod"><span class="eyes"><span class="eye"></span><span class="eye"></span></span></span>';
+        el.addEventListener("click", () => tap(el, r, c, dir));
+        board.appendChild(el);
+      }
+      showCount();
+    }
+
+    document.getElementById("again").addEventListener("click", setup);
+    setup();
+  </script>
+</body>
+</html>
