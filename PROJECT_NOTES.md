@@ -45,3 +45,6 @@ Goal: make the landing page feel alive and on-brand while staying dependency-fre
 ## Workflow notes
 - Owner runs `git push` from their own machine. Agent commits locally; check `git status` and `git log` before assuming something is pushed.
 - Agent shell may leave `.git/*.lock` or `tmp_obj_*` files; clean with `find .git \( -name '*.lock' -o -name 'tmp_obj_*' \) -print -delete` (needs delete permission).
+
+## Run locally
+- `cd ~/dev/home/koko-site && python3 -m http.server` then open http://localhost:8000
